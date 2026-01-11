@@ -15,7 +15,13 @@ namespace Kebolder.DevTools.Editor.Modules
 
         private static GameObject _constrainedGO;
         private static float _globalWeight = 1f;
-        private static readonly List<GameObject> SourceGOs = new List<GameObject>();
+        private sealed class SourceEntry
+        {
+            public GameObject Source;
+            public float Weight = 1f;
+        }
+
+        private static readonly List<SourceEntry> Sources = new List<SourceEntry>();
         private static ReorderableList _sourcesList;
         private static bool _offsetPosition;
         private static bool _offsetRotation;
@@ -66,7 +72,7 @@ namespace Kebolder.DevTools.Editor.Modules
 
                 EditorGUILayout.Space(DevToolsStyles.Spacing.ButtonGroupGap);
 
-                var canRun = _constrainedGO != null && SourceGOs.Any(s => s != null);
+                var canRun = _constrainedGO != null && Sources.Any(s => s != null && s.Source != null);
                 using (new EditorGUI.DisabledScope(!canRun))
                 {
                     EditorGUILayout.BeginHorizontal();
@@ -84,21 +90,38 @@ namespace Kebolder.DevTools.Editor.Modules
         {
             if (_sourcesList != null) return;
 
-            _sourcesList = new ReorderableList(SourceGOs, typeof(GameObject), true, true, true, true);
+            _sourcesList = new ReorderableList(Sources, typeof(SourceEntry), true, true, true, true);
             _sourcesList.drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Sources");
-            _sourcesList.elementHeight = EditorGUIUtility.singleLineHeight + 4f;
+            _sourcesList.elementHeight = (EditorGUIUtility.singleLineHeight * 2f) + 8f;
             _sourcesList.drawElementCallback = (rect, index, _, __) =>
             {
                 rect.y += 2f;
-                var element = SourceGOs[index];
-                SourceGOs[index] = (GameObject)EditorGUI.ObjectField(rect, $"Source {index}", element, typeof(GameObject), true);
+                var entry = Sources[index];
+                if (entry == null)
+                {
+                    entry = new SourceEntry();
+                    Sources[index] = entry;
+                }
+
+                var lineHeight = EditorGUIUtility.singleLineHeight;
+                var sourceRect = new Rect(rect.x, rect.y, rect.width, lineHeight);
+                var weightRect = new Rect(rect.x, rect.y + lineHeight + 4f, rect.width, lineHeight);
+
+                entry.Source = (GameObject)EditorGUI.ObjectField(
+                    sourceRect,
+                    $"Source {index}",
+                    entry.Source,
+                    typeof(GameObject),
+                    true);
+
+                entry.Weight = EditorGUI.Slider(weightRect, "Weight", entry.Weight, 0f, 1f);
             };
-            _sourcesList.onAddCallback = _ => SourceGOs.Add(null);
+            _sourcesList.onAddCallback = _ => Sources.Add(new SourceEntry());
             _sourcesList.onRemoveCallback = list =>
             {
-                if (list.index >= 0 && list.index < SourceGOs.Count)
+                if (list.index >= 0 && list.index < Sources.Count)
                 {
-                    SourceGOs.RemoveAt(list.index);
+                    Sources.RemoveAt(list.index);
                 }
             };
         }
@@ -117,7 +140,9 @@ namespace Kebolder.DevTools.Editor.Modules
                 return;
             }
 
-            var validSources = SourceGOs.Where(s => s != null).ToList();
+            var validSources = Sources
+                .Where(s => s != null && s.Source != null)
+                .ToList();
             if (validSources.Count == 0)
             {
                 EditorUtility.DisplayDialog(
@@ -165,7 +190,8 @@ namespace Kebolder.DevTools.Editor.Modules
 
             for (var i = 0; i < validSources.Count; i++)
             {
-                var srcTr = validSources[i].transform;
+                var entry = validSources[i];
+                var srcTr = entry.Source.transform;
 
                 var sourceEl = GetVrcSourceElement(so, i);
                 if (sourceEl == null)
@@ -179,14 +205,15 @@ namespace Kebolder.DevTools.Editor.Modules
                 }
 
                 SetRelObject(sourceEl, "SourceTransform", srcTr);
-                SetRelFloat(sourceEl, "Weight", 1f);
+                SetRelFloat(sourceEl, "Weight", entry.Weight);
 
                 if (_offsetPosition || _offsetRotation)
                 {
+                    var posOff = Quaternion.Inverse(srcTr.rotation) * (constrainedTr.position - srcTr.position);
                     var delta = Quaternion.Inverse(srcTr.rotation) * constrainedTr.rotation;
                     var rotOffEuler = delta.eulerAngles;
 
-                    SetRelVector3(sourceEl, "ParentPositionOffset", _offsetPosition ? -srcTr.localPosition : Vector3.zero);
+                    SetRelVector3(sourceEl, "ParentPositionOffset", _offsetPosition ? posOff : Vector3.zero);
                     SetRelVector3(sourceEl, "ParentRotationOffset", _offsetRotation ? rotOffEuler : Vector3.zero);
                 }
                 else

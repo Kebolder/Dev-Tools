@@ -7,8 +7,7 @@ on:
     paths: package.json
 
 env:
-  icon_path: .github/thumbnail.png
-  triggerRepoUpdate: ${{ false }}
+  triggerRepoUpdate: ${{ true }}
 
 permissions:
   contents: write
@@ -52,7 +51,7 @@ jobs:
         run: zip -x '.git/*' '.github/*' -r "/tmp/${{ env.zipFile }}" .
 
       - name: Create UnityPackage
-        uses: foxscore/make-unitypackage@cbd3def23d6c9910b56e726b193c2363e5ca6adc
+        uses: foxscore/make-unitypackage@v1.1
         with:
           path: .
           saveTo: /tmp/${{ env.unityPackage }}
@@ -96,4 +95,6 @@ jobs:
         if: ${{ env.triggerRepoUpdate == 'true' }}
         uses: peter-evans/repository-dispatch@v2
         with:
+          token: ${{ secrets.VPM_TOKEN }}
+          repository: Kebolder/Kebolder-VPM-Listing
           event-type: trigger-repo-update

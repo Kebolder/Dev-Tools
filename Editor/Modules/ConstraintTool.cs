@@ -17,6 +17,8 @@ namespace Kebolder.DevTools.Editor.Modules
         private static float _globalWeight = 1f;
         private static readonly List<GameObject> SourceGOs = new List<GameObject>();
         private static ReorderableList _sourcesList;
+        private static bool _offsetPosition;
+        private static bool _offsetRotation;
 
         public static void Draw()
         {
@@ -47,6 +49,8 @@ namespace Kebolder.DevTools.Editor.Modules
                     if (settingsFoldout.Expanded)
                     {
                         _globalWeight = EditorGUILayout.Slider("Weight", _globalWeight, 0f, 1f);
+                        _offsetPosition = EditorGUILayout.Toggle("Offset Position", _offsetPosition);
+                        _offsetRotation = EditorGUILayout.Toggle("Offset Rotation", _offsetRotation);
                     }
                 }
 
@@ -68,12 +72,7 @@ namespace Kebolder.DevTools.Editor.Modules
                     EditorGUILayout.BeginHorizontal();
                     if (GUILayout.Button("Add Constraint"))
                     {
-                        AddConstraint(withOffset: false);
-                    }
-
-                    if (GUILayout.Button("Add Constraint w/ Offset"))
-                    {
-                        AddConstraint(withOffset: true);
+                        AddConstraint();
                     }
 
                     EditorGUILayout.EndHorizontal();
@@ -104,7 +103,7 @@ namespace Kebolder.DevTools.Editor.Modules
             };
         }
 
-        private static void AddConstraint(bool withOffset)
+        private static void AddConstraint()
         {
             var constraintType = FindTypeByFullName("VRC.SDK3.Dynamics.Constraint.Components.VRCParentConstraint")
                 ?? FindTypeByName("VRCParentConstraint");
@@ -182,14 +181,13 @@ namespace Kebolder.DevTools.Editor.Modules
                 SetRelObject(sourceEl, "SourceTransform", srcTr);
                 SetRelFloat(sourceEl, "Weight", 1f);
 
-                if (withOffset)
+                if (_offsetPosition || _offsetRotation)
                 {
-                    var posOff = -srcTr.localPosition;
                     var delta = Quaternion.Inverse(srcTr.rotation) * constrainedTr.rotation;
                     var rotOffEuler = delta.eulerAngles;
 
-                    SetRelVector3(sourceEl, "ParentPositionOffset", posOff);
-                    SetRelVector3(sourceEl, "ParentRotationOffset", rotOffEuler);
+                    SetRelVector3(sourceEl, "ParentPositionOffset", _offsetPosition ? -srcTr.localPosition : Vector3.zero);
+                    SetRelVector3(sourceEl, "ParentRotationOffset", _offsetRotation ? rotOffEuler : Vector3.zero);
                 }
                 else
                 {

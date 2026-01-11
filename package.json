@@ -1,0 +1,20 @@
+{
+  "name": "com.kebolder.devtools",
+  "displayName": "Kebolder - Dev Tools",
+  "version": "1.0.0",
+  "description": "",
+  "url": "https://github.com/Kebolder/Dev-Tools",
+  "vpmDependencies": {},
+  "type": "tool",
+  "keywords": [
+    "tool",
+    "sync",
+    "vrchat",
+    "remote",
+    "quailty of life",
+    "qol"
+  ],
+  "author": {
+    "name": "Kebolder"
+  }
+}

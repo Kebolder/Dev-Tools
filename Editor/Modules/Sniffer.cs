@@ -10,7 +10,7 @@ namespace Kebolder.DevTools.Editor.Modules
         // Lower values render higher in the Dev Tools window.
         public const int Order = 99;
 
-        private static GameObject _targetGO;
+        private static UnityEngine.Object _targetObject;
         private static int _componentIndex;
         private static Component[] _components = Array.Empty<Component>();
         private static bool _includeHidden;
@@ -26,59 +26,61 @@ namespace Kebolder.DevTools.Editor.Modules
                 }
 
                 EditorGUILayout.LabelField(
-                    "Pick a GameObject, then choose a Component to dump.",
+                    "Pick a GameObject, Component, or asset to dump serialized names.",
                     EditorStyles.wordWrappedLabel);
                 EditorGUILayout.Space(8);
 
-                _targetGO = (GameObject)EditorGUILayout.ObjectField(
-                    "GameObject",
-                    _targetGO,
-                    typeof(GameObject),
+                _targetObject = EditorGUILayout.ObjectField(
+                    "Target",
+                    _targetObject,
+                    typeof(UnityEngine.Object),
                     true);
 
                 if (GUILayout.Button("Use Active Selection"))
                 {
-                    _targetGO = Selection.activeGameObject;
+                    _targetObject = Selection.activeObject;
                     _componentIndex = 0;
                 }
 
                 EditorGUILayout.Space(8);
 
-                if (_targetGO == null)
+                if (_targetObject == null)
                 {
                     // Early exit when no target is selected.
-                    EditorGUILayout.HelpBox("Assign a GameObject to continue.", MessageType.Info);
+                    EditorGUILayout.HelpBox("Assign a GameObject, Component, or asset to continue.", MessageType.Info);
                     return;
                 }
 
-                _components = _targetGO.GetComponents<Component>();
-                if (_components == null) _components = Array.Empty<Component>();
-                if (_components.Length == 0)
+                var dumpTarget = ResolveDumpTarget();
+                if (dumpTarget == null)
                 {
                     EditorGUILayout.HelpBox("No components found on this GameObject.", MessageType.Warning);
                     return;
                 }
 
-                var names = new string[_components.Length];
-                for (var i = 0; i < _components.Length; i++)
-                {
-                    var c = _components[i];
-                    names[i] = c == null ? "(Missing Script)" : c.GetType().FullName;
-                }
-
                 _componentIndex = Mathf.Clamp(_componentIndex, 0, _components.Length - 1);
-                _componentIndex = EditorGUILayout.Popup("Component", _componentIndex, names);
+                if (_components.Length > 1)
+                {
+                    var names = new string[_components.Length];
+                    for (var i = 0; i < _components.Length; i++)
+                    {
+                        var c = _components[i];
+                        names[i] = c == null ? "(Missing Script)" : c.GetType().FullName;
+                    }
+
+                    _componentIndex = EditorGUILayout.Popup("Component", _componentIndex, names);
+                }
 
                 EditorGUILayout.Space(10);
 
                 _includeHidden = EditorGUILayout.Toggle("Include Hidden Properties", _includeHidden);
                 EditorGUILayout.Space(6);
 
-                using (new EditorGUI.DisabledScope(_components[_componentIndex] == null))
+                using (new EditorGUI.DisabledScope(dumpTarget == null))
                 {
                     if (GUILayout.Button("Dump Serialized Info to Console"))
                     {
-                        DumpComponent(_components[_componentIndex], _includeHidden);
+                        DumpObject(dumpTarget, _includeHidden);
                     }
                 }
 
@@ -90,13 +92,38 @@ namespace Kebolder.DevTools.Editor.Modules
             }
         }
 
-        private static void DumpComponent(Component comp, bool includeHidden)
+        private static UnityEngine.Object ResolveDumpTarget()
         {
-            if (comp == null) return;
+            if (_targetObject is GameObject go)
+            {
+                _components = go.GetComponents<Component>() ?? Array.Empty<Component>();
+                if (_components.Length == 0) return null;
+                _componentIndex = Mathf.Clamp(_componentIndex, 0, _components.Length - 1);
+                return _components[_componentIndex];
+            }
 
-            Debug.Log($"[ComponentSniffer] Dumping: {comp.GetType().FullName} on '{comp.gameObject.name}'");
+            if (_targetObject is Component comp)
+            {
+                _components = new[] { comp };
+                _componentIndex = 0;
+                return comp;
+            }
 
-            var so = new SerializedObject(comp);
+            _components = Array.Empty<Component>();
+            _componentIndex = 0;
+            return _targetObject;
+        }
+
+        private static void DumpObject(UnityEngine.Object target, bool includeHidden)
+        {
+            if (target == null) return;
+
+            var targetName = target is Component c
+                ? $"'{c.gameObject.name}'"
+                : $"'{target.name}'";
+            Debug.Log($"[ComponentSniffer] Dumping: {target.GetType().FullName} on {targetName}");
+
+            var so = new SerializedObject(target);
             var it = so.GetIterator();
 
             var enterChildren = true;

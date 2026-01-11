@@ -15,16 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Release
-
-
+---
 ## [1.0.1] - 1/11/2026
 
 - lowkey dont remember
-
+---
 ## [1.0.2] - 1/11/2026
 ## Added
 - Weight slider per source
 - Offset position/rotation toggle
-
+---
 ## Removed
 - "Add constraint w/offfset. Replaced with settings toggle
+---
+## [1.0.3] - 1/11/2026
+### Changed
+- Made my sniffer use objects generalized making it take more then a game object for seralized names.

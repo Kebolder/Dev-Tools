@@ -58,4 +58,7 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+
+# AI slop for things when Im lazy
 AGENTS.md
+AGENTS.md.meta

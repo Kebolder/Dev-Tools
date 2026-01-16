@@ -31,3 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.3] - 1/11/2026
 ### Changed
 - Made my sniffer use objects generalized making it take more then a game object for seralized names.
+---
+## [1.0.4] - 1/16/2026
+### Added
+- Added table drawing method for the GUI
+- Added "Animation repath tool" to the GUI
+---

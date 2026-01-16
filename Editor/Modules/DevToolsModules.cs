@@ -21,7 +21,8 @@ namespace Kebolder.DevTools.Editor.Modules
         private static readonly Module[] Modules =
         {
             new Module(Sniffer.Order, Sniffer.Draw),
-            new Module(ConstraintTool.Order, ConstraintTool.Draw)
+            new Module(ConstraintTool.Order, ConstraintTool.Draw),
+            new Module(AnimRepath.Order, AnimRepath.Draw)
         };
 
         public static void DrawAll()

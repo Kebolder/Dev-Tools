@@ -20,6 +20,7 @@ namespace Kebolder.DevTools.Editor.Modules
         private static bool _bulkOnlyMissing;
         private static string _bulkOriginal = string.Empty;
         private static string _bulkReplacement = string.Empty;
+        private static Vector2 _tableScroll;
         private static readonly DevToolsGUI.TableColumn[] TableColumns =
         {
             DevToolsGUI.TableColumn.Fixed("Clip", 180f),
@@ -92,8 +93,8 @@ namespace Kebolder.DevTools.Editor.Modules
                 var animator = _targetObject.GetComponent<Animator>();
                 if (animator == null)
                 {
-                    EditorGUILayout.HelpBox("Selected object has no Animator component.", MessageType.Info);
-                    return null;
+                    EditorGUILayout.HelpBox("Selected object has no Animator component. Falling back to Animator Controller field.", MessageType.Info);
+                    return _controller;
                 }
 
                 var runtime = animator.runtimeAnimatorController;
@@ -105,8 +106,8 @@ namespace Kebolder.DevTools.Editor.Modules
                 var controller = runtime as AnimatorController;
                 if (controller == null)
                 {
-                    EditorGUILayout.HelpBox("Animator does not use an AnimatorController.", MessageType.Info);
-                    return null;
+                    EditorGUILayout.HelpBox("Animator does not use an AnimatorController. Falling back to Animator Controller field.", MessageType.Info);
+                    return _controller;
                 }
 
                 return controller;
@@ -132,6 +133,7 @@ namespace Kebolder.DevTools.Editor.Modules
             }
 
             var entries = BuildEntries(selectedClips, _targetObject);
+            _tableScroll = EditorGUILayout.BeginScrollView(_tableScroll, GUILayout.Height(300f));
             using (var table = DevToolsGUI.BeginTable("modules.anim_repath.table", TableColumns))
             {
                 foreach (var entry in entries)
@@ -179,6 +181,7 @@ namespace Kebolder.DevTools.Editor.Modules
                     });
                 }
             }
+            EditorGUILayout.EndScrollView();
         }
 
         private static void DrawClipSelector(IReadOnlyList<AnimationClip> clips)

@@ -37,3 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added table drawing method for the GUI
 - Added "Animation repath tool" to the GUI
 ---
+## [1.0.5] - 1/16/2026
+### Fixed 
+- Fixed issue where if table is too big no scroll bar
+- Fixed issue where is root object as no animator it returns null

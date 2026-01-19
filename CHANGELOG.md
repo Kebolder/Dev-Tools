@@ -41,3 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed 
 - Fixed issue where if table is too big no scroll bar
 - Fixed issue where is root object as no animator it returns null
+---
+## [1.0.6] - 1/19/2026
+### Added
+- Added my expression menu creator because im lazy.

@@ -22,7 +22,8 @@ namespace Kebolder.DevTools.Editor.Modules
         {
             new Module(Sniffer.Order, Sniffer.Draw),
             new Module(ConstraintTool.Order, ConstraintTool.Draw),
-            new Module(AnimRepath.Order, AnimRepath.Draw)
+            new Module(AnimRepath.Order, AnimRepath.Draw),
+            new Module(ExpressionAdder.Order, ExpressionAdder.Draw)
         };
 
         public static void DrawAll()
